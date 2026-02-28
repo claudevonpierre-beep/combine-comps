@@ -407,8 +407,14 @@ function runComps() {
       weightSum += w;
     }
     if (weightSum === 0) return null;
-    const dist = Math.sqrt(distSq / weightSum);
-    return { ...r, dist, weightSum };
+    let dist = Math.sqrt(distSq / weightSum);
+    // Completeness bonus: penalize historical players with sparse data.
+    // Count how many of the 5 key athletic metrics are present.
+    const athleticKeys = ['f','v','b','c','sh'];
+    const hasMets = athleticKeys.filter(k => r[k] != null).length;
+    // Mild penalty (up to +0.25 dist) for players with fewer than 3 metrics
+    if (hasMets < 3) dist += (3 - hasMets) * 0.12;
+    return { ...r, dist, weightSum, hasMets };
   }).filter(Boolean);
 
   scored.sort((a, b) => a.dist - b.dist);
